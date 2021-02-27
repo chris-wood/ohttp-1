@@ -331,15 +331,15 @@ fn pkg_config() -> Vec<String> {
 }
 
 fn main() {
-    println!("cargo:rerun-if-env-changed=NSS_DIR");
-    let flags = nss_dir().map_or_else(pkg_config, |nss| build(&nss));
+    // println!("cargo:rerun-if-env-changed=NSS_DIR");
+    // let flags = nss_dir().map_or_else(pkg_config, |nss| build(&nss));
 
-    let config_file = PathBuf::from(BINDINGS_DIR).join(BINDINGS_CONFIG);
-    println!("cargo:rerun-if-changed={}", config_file.to_str().unwrap());
-    let config = fs::read_to_string(config_file).expect("unable to read binding configuration");
-    let config: HashMap<String, Bindings> = ::toml::from_str(&config).unwrap();
+    // let config_file = PathBuf::from(BINDINGS_DIR).join(BINDINGS_CONFIG);
+    // println!("cargo:rerun-if-changed={}", config_file.to_str().unwrap());
+    // let config = fs::read_to_string(config_file).expect("unable to read binding configuration");
+    // let config: HashMap<String, Bindings> = ::toml::from_str(&config).unwrap();
 
-    for (k, v) in &config {
-        build_bindings(k, v, &flags[..]);
-    }
+    // for (k, v) in &config {
+    //     build_bindings(k, v, &flags[..]);
+    // }
 }

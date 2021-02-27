@@ -1,7 +1,8 @@
 #[derive(Debug)]
 pub enum Error {
     /// A problem occurred during cryptographic processing.
-    Crypto(crate::nss::Error),
+    // Crypto(crate::nss::Error),
+
     /// An error was found in the format.
     Format,
     /// An IO error.
@@ -36,7 +37,7 @@ macro_rules! forward_errors {
 }
 
 forward_errors! {
-    crate::nss::Error => Crypto,
+    // crate::nss::Error => Crypto,
     std::io::Error => Io,
 }
 
