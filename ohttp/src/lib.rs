@@ -132,6 +132,18 @@ impl KeyConfig {
         })
     }
 
+    pub fn new_from_seed(key_id: u8, ikm: &[u8]) -> Res<Self> {
+        let (sk, pk) = Kem::derive_keypair(&ikm);
+        Ok(Self {
+            key_id,
+            sk: Some(sk),
+            pk,
+        })
+    }
+
+    // let derived_kp = Kem::derive_keypair(&tv.ikm_recip);
+
+
     /// Encode into a wire format.  This shares a format with the core of ECH:
     ///
     /// ```tls-format
@@ -200,7 +212,7 @@ impl KeyConfig {
             assert!(aead_id == AEAD_ID);
             // symmetric.push(SymmetricSuite::new(HkdfSha256{}, AesGcm128{}));
         }
-        
+
         // Check that there was nothing extra.
         let mut tmp = [0; 1];
         if r.read(&mut tmp)? > 0 {
@@ -488,9 +500,37 @@ mod test {
     #[test]
     fn request_response() {
         // crate::init();
-
         let server_config = KeyConfig::new(KEY_ID).unwrap();
         let mut server = Server::new(server_config).unwrap();
+
+        let encoded_config = server.config().encode().unwrap();
+        trace!("Config: {}", hex::encode(&encoded_config));
+
+        let recovered_config = KeyConfig::parse(&encoded_config).unwrap();
+
+        let client = ClientRequest::new(&encoded_config).unwrap();
+        let (enc_request, client_response) = client.encapsulate(REQUEST).unwrap();
+        trace!("Request: {}", hex::encode(REQUEST));
+        trace!("Encapsulated Request: {}", hex::encode(&enc_request));
+
+        let (request, server_response) = server.decapsulate(&enc_request).unwrap();
+        assert_eq!(&request[..], REQUEST);
+
+        let enc_response = server_response.encapsulate(RESPONSE).unwrap();
+        trace!("Encapsulated Response: {}", hex::encode(&enc_response));
+
+        let response = client_response.decapsulate(&enc_response).unwrap();
+        assert_eq!(&response[..], RESPONSE);
+        trace!("Response: {}", hex::encode(RESPONSE));
+    }
+
+    #[test]
+    fn request_response_from_seed() {
+        // crate::init();
+        let seed = "08c9f68232c5ed556cc70586cc0373e82eef636c837e6d65fbe9a3725c4ff273";
+        let server_config = KeyConfig::new_from_seed(KEY_ID, seed.as_bytes()).unwrap();
+        let mut server = Server::new(server_config).unwrap();
+
         let encoded_config = server.config().encode().unwrap();
         trace!("Config: {}", hex::encode(&encoded_config));
 
